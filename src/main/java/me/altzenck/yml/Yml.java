@@ -8,8 +8,6 @@ import org.yaml.snakeyaml.Yaml;
 
 public class Yml extends Section{
 
-   private Section def;   
-
    @SuppressWarnings("unchecked")
    private Yml(InputStream is) {
 	   yaml.putAll((Map<String,Object>) new Yaml().load(is));
@@ -31,7 +29,7 @@ public class Yml extends Section{
 	   return def;
    }
    
-   public void save(File file) {
+   public void save(@Nonnull File file) {
 	   DumperOptions options = new DumperOptions();
 	   options.setIndent(2);
 	   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
@@ -50,7 +48,7 @@ public class Yml extends Section{
 	   }
    }
    
-   public static Yml loadYaml(File file) {
+   public static Yml loadYaml(@Nonnull File file) {
 	try {
 		return loadYaml(new FileInputStream(file));
 	} catch (Exception e) {
@@ -58,7 +56,7 @@ public class Yml extends Section{
 	}
    }
    
-   public static Yml loadYaml(Reader reader) {
+   public static Yml loadYaml(@Nonnull Reader reader) {
 	 char[] buffer = new char[2048];
 	 int i = 0;
 	 StringBuilder sb = new StringBuilder();
