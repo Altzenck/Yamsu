@@ -1,4 +1,4 @@
-package me.altzenck.yaml;
+package me.altzenck.yml;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,11 +13,13 @@ import javax.annotation.Nonnull;
 public abstract class Section {
 
 	public final HashMap<String,Object> yaml = new HashMap<String,Object>();
+	protected Section def;
 	private LinkedList<String> cpath = new LinkedList<String>();
 	protected static final String SEPARATOR = ".", SEPARATOR_RGX = "\\" + SEPARATOR;
 	
-	protected Section() {}
-	
+	protected Section() {
+		def = this;
+	}
 	
 	public Section getSection(@Nonnull String section) {
 		if(!setSection(getCurrent(), parsePath(section))) return null;
@@ -28,7 +30,7 @@ public abstract class Section {
 		return prevSections(1);
 	}
 	
-    public Section prevSections(int amount) {
+        public Section prevSections(int amount) {
 		while(amount > 0) {
 			cpath.removeLast();
 			amount--;		
@@ -43,9 +45,8 @@ public abstract class Section {
 	
 	public Object get(String path) {
 		List<String> s = parsePath(path);
-		if(s.size() < 2)
-			return getCurrent().get(path);
-		return getSection(getCurrent(), s.subList(0, s.size()-1)).get(s.get(s.size()-1));
+		Object value = (s.size() < 2)? getCurrent().get(path): getSection(getCurrent(), s.subList(0, s.size()-1)).get(s.get(s.size()-1));
+		return ((value == null)? def.get(path): value);
 	}
 	
 	public String getString(String key) {
