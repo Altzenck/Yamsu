@@ -17,23 +17,25 @@ public class Yml extends Section{
 	   yaml.putAll((Map<String,Object>) new Yaml().load(is));
    }
    
-   public void setDefaults(File file) {
+   public void setDefaults(@Nonnull File file) {
 	   setDefaults(Yml.loadYaml(file));
    }
    
-   public void setDefaults(Reader reader) {
+   public void setDefaults(@Nonnull Reader reader) {
 	   setDefaults(Yml.loadYaml(reader));
    }
    
-   public void setDefaults(InputStream is) {
+   public void setDefaults(@Nonnull InputStream is) {
 	   setDefaults(Yml.loadYaml(is));
    }
    
-   public void save(File file) {
+   public void save(@Nonnull File file) {
+	   file.getParentFile().mkdirs();
+	   if(file.isDirectory()) throw new IllegalArgumentException("The specified file is a directory!");
 	   DumperOptions options = new DumperOptions();
 	   options.setIndent(2);
 	   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-	   file.mkdirs();
+	   if(file.exists()) file.delete();
 	   try {
 		StringReader in = new StringReader(new Yaml(options).dump(yaml));
 	    FileOutputStream os = new FileOutputStream(file);
@@ -48,7 +50,7 @@ public class Yml extends Section{
 	   }
    }
    
-   public static Yml loadYaml(File file) {
+   public static Yml loadYaml(@Nonnull File file) {
 	try {
 		return loadYaml(new FileInputStream(file));
 	} catch (Exception e) {
@@ -56,7 +58,7 @@ public class Yml extends Section{
 	}
    }
    
-   public static Yml loadYaml(Reader reader) {
+   public static Yml loadYaml(@Nonnull Reader reader) {
 	 char[] buffer = new char[2048];
 	 int i = 0;
 	 StringBuilder sb = new StringBuilder();
