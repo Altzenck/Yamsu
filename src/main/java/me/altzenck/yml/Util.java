@@ -11,8 +11,6 @@ import org.yaml.snakeyaml.Yaml;
  * @version 1.1.0
  */
 public class Yml extends Section{
-	
-   public static Reader de;
 
    @SuppressWarnings("unchecked")
    private Yml(InputStream is) {
