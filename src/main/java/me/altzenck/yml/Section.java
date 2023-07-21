@@ -33,11 +33,11 @@ public abstract class Section {
 	 * @param def The section instance from which its parent section will be set.
 	 */
 	public void setDefaults(@Nonnull Section def) {
-		if(def == this) {
+		if(isDefault) return;
+		if(def == yaml || def == current) {
 			this.def = new Section() {};
 			this.def.yaml.putAll(def.yaml);
 		}
-		if(isDefault) return;
 		this.def = def;
 		this.def.isDefault = true;
 	}
