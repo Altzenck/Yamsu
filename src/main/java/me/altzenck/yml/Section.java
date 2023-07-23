@@ -7,58 +7,53 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import me.altzenck.utils.YmlUtils;
 
 @SuppressWarnings("unchecked")
 public abstract class Section {
 
-	/**
-	 * The yaml object parsed as a Map. It can be manually modified and later exported.
-	 */
-	public final Map<String,Object> yaml = new HashMap<String,Object>();
+	private YamlBase root;
 	
-	private Section def;
-	private boolean isDefault;
+	protected boolean isDefault;
 	
-	protected final ArrayList<String> cpath = new ArrayList<String>();
-	private Map<String,Object> current = null;
+	protected ArrayList<String> cpath;
+	protected Map<String,Object> current;
 	
 	protected static final String SEPARATOR = ".", SEPARATOR_RGX = "\\" + SEPARATOR;
 	
-	protected Section() {
+	protected Section(@Nullable Map<String, Object> sec) {
+		this(sec, null, null, false);
 	}
 	
+	protected Section(@Nullable Map<String, Object> sec, @Nullable ArrayList<String> path) {
+		this(sec, path, null, false);
+	}
+	
+	protected Section(@Nullable Map<String, Object> sec, @Nullable ArrayList<String> path, @Nullable YamlBase root) {
+		this(sec, path, root, false);
+	}
+	
+	protected Section(@Nullable Map<String, Object> sec, @Nullable ArrayList<String> path, @Nullable YamlBase root, boolean isDef) {
+		isDefault = isDef;
+		this.root = (root == null && !isDef)? ((YamlBase) this): root;
+		current = (sec == null)? new HashMap<String,Object>(): sec;
+		cpath = (path == null)? new ArrayList<String>(): path;
+	}
+	
+	public YamlBase getRoot() {
+		return root;
+	}
+	
+    
 	/**
-	 * Sets the parent section of a section instance as the default value source for the parent section of the current instance. If the specified instance is the current instance, a clone will be created and established.
-	 * @param def The section instance from which its parent section will be set.
-	 */
-	public void setDefaults(@Nonnull Section def) {
-		if(isDefault) return;
-		if(def == yaml || def == current) {
-			this.def = new Section() {};
-			this.def.yaml.putAll(def.yaml);
-		}
-		this.def = def;
-		this.def.isDefault = true;
-	}
-	
-	/**
-	 * Gets the default section for the parent section of this instance.
-	 * 
-	 * @return an immutable instance of the parent section that represents the default values for the current section.
-	 * 
-	 */
-    public Section getDefaults() {
-	    return def;
-	}
-	
-    /**
-     * Assigns or adds a default section value from the key path starting from the current section.
-     * 
-     * @param path The path to the default section key starting from the current section.
-     * @param replace If even such a path exists in the current section, its value must be replaced.
-     */
+         * Assigns or adds a default section value from the key path starting from the current section.
+         * 
+         * @param path The path to the default section key starting from the current section.
+         * @param replace If even such a path exists in the current section, its value must be replaced.
+         */
 	public void addDefaults(@Nonnull String path, boolean replace) {
+		if(isDefault) return;
 		Object dvalue = (isDefault)? null: getDefault(path);
 		Object cvalue = get(path);
 		if((cvalue == null || replace) && dvalue != null)
@@ -71,10 +66,11 @@ public abstract class Section {
 	 * @param replace Whether to replace path keys that already exist.
 	 */
 	public void addAllDefaults(boolean replace) {
-		aADSetter(getCurrent(), def.getSection(def.yaml, cpath), replace);
+		if(isDefault) return;
+		aADSetter(current, root.def.getSection(cpath), replace);
 	}
 	
-	public void aADSetter(Map<String, Object> m, Map<String, Object> d, boolean replace) {
+	private void aADSetter(Map<String, Object> m, Map<String, Object> d, boolean replace) {
 		for(String key: d.keySet()) {
 			Object dvalue = d.get(key);
 			boolean c = m.containsKey(key), ins = dvalue instanceof Map;
@@ -86,39 +82,44 @@ public abstract class Section {
 		}
 	}
 	
+	
 	/**
 	 * Gets a section of the parsed yaml object (A "section" is understood to be any key that has a {@link Map} instance as its value).
 	 * 
 	 * @return the current instance but with the section assigned, or <code>null</code> if the specified path does not exist or is not a section.
 	 */
 	public Section getSection(@Nonnull String section) {
-		if(!setSection(getCurrent(), parsePath(section))) return null;
-		return this;
+		ArrayList<String> s = parsePath(section);
+		Map<String, Object> current = getSection(s);
+		if(current == null) return null;
+		return new Section(current, s, root) {};
 	}
 	
-	/**
+	/*
 	 * Go back to the previous section from the current section.
 	 * 
 	 * @return the current instance with the new section set, or the current instance itself if the current section is the parent section.
-	 */
+	 
 	public Section prevSection() {
 		return prevSections(1);
 	}
+	*/
 	
-	/**
+	/*
 	 * Go back to the parent section
 	 * 
 	 * @return the current instance with the new section set, or the current instance itself if the current section is the parent section.
-	 */
+	 
 	public Section prevSections() {
 		return prevSections(0);
 	}
+	*/
 	
-	/**
+	/*
 	 * Go back a certain number of sections. Specifying 0 for amount will backtrack to the parent section.
 	 * 
 	 * @return the current instance with the new section set, or the current instance itself if the current section is the parent section, or <code>null</code> if a negative quantity is specified.
-	 */
+	
     public Section prevSections(int amount) {
     	ArrayList<String> temp = new ArrayList<String>(cpath);
     	if(amount < 0) return null;
@@ -138,7 +139,7 @@ public abstract class Section {
 		current = sec;
 		return this;
 	}
-	
+	*/
 	private void checkFormat(String text, String cexc) {
 		if(!Pattern.matches("^(\\w|[-_çÇ\\*ñÑ])+$", text)) throw new IllegalArgumentException((cexc == null)? "Invalid format! for String: " + text: String.format(cexc, text));
 	}
@@ -159,8 +160,8 @@ public abstract class Section {
 		return getDefault(path);
 	}
 	
-	private Object getDefault(@Nonnull String path) {
-		return def.get(YmlUtils.stringJoinFromObject(SEPARATOR, cpath, path));
+	protected Object getDefault(@Nonnull String path) {
+		return root.def.get(YmlUtils.stringJoinFromObject(SEPARATOR, cpath, path));
 	}
 	
 	/**
@@ -347,7 +348,7 @@ public abstract class Section {
 	 */
 	public List<String> getKeys(boolean deep) {
 		List<String> ks = new ArrayList<String>();
-		Map<String,Object> current = getCurrent();
+		Map<String,Object> current = this.current;
 		keyDeep(current, ks, "", deep);
 		return ks;
 	}
@@ -382,6 +383,7 @@ public abstract class Section {
 	}
 	
 	private Object set(@Nonnull String path, Object value, boolean replace) {
+		if(isDefault) return null;
 		StringBuilder sb = new StringBuilder();
 		Map<String,Object> sec = secureKeyPathHandler(path, sb, true);
 		String key = sb.toString();
@@ -398,6 +400,7 @@ public abstract class Section {
 	 * @return the value set to this key/section path prior to deletion (If it existed, <code>null</code> otherwise).
 	 */
 	public Object remove(@Nonnull String path) {
+		if(isDefault) return null;
 		StringBuilder sb = new StringBuilder();
 		Map<String,Object> sec = secureKeyPathHandler(path, sb, false);
 		String key = sb.toString();
@@ -416,10 +419,8 @@ public abstract class Section {
 		return (get(path) instanceof Map);
 	}
 	
-	
-	@SuppressWarnings("unused")
-	private Map<String,Object> getSection(List<String> s){
-		return getSection(getCurrent(), s);
+	protected Map<String,Object> getSection(List<String> s){
+		return getSection(current, s);
 	}
 	
     private Map<String,Object> getSection(Map<String,Object> map, List<String> s){
@@ -445,13 +446,14 @@ public abstract class Section {
 	 * 
 	 * @param path The path to the section to create.
 	 */
-	public void createSection(String path) {
-		if(isDefault) return;
+	public Section createSection(String path) {
+		if(isDefault) return null;
 		createSection(parsePath(path), true);
+		return getSection(path);
 	}
 	
 	private Map<String, Object> createSection(List<String> s, boolean replace){
-		Map<String, Object> temp = getCurrent();
+		Map<String, Object> temp = current;
 		for(int i = 0; i < s.size(); i++) {
 		  String key = s.get(i);
 		  Object value = temp.get(key);
@@ -466,6 +468,7 @@ public abstract class Section {
 		return temp;
 	}
 	
+	/*
 	private boolean setSection(Map<String,Object> from, List<String> s) {
 		boolean i = from == null;
 		Map<String,Object> sec = getSection((i)? yaml: from, s);
@@ -474,19 +477,14 @@ public abstract class Section {
 		current = sec;
 		cpath.addAll(s);
 		return true;
-	}
-	
-	@Nonnull
-	private Map<String,Object> getCurrent() {
-		return (cpath.isEmpty())? yaml : current;
-	}
+	}*/
 	
 	/**
 	 * Gets the path name to the current section of this instance.
 	 * 
 	 * @return the path name of the current section.
 	 */
-	public String getCurrentPath() {
+	public String getPath() {
 	  return String.join(SEPARATOR, cpath);
 	}
 	
@@ -499,7 +497,7 @@ public abstract class Section {
 		String key = YmlUtils.removeLast(s);
 		if(s.size() == 0) {
 			sb.replace(0, sb.length(), path);
-			return getCurrent();
+			return current;
 		}
 		sb.replace(0, sb.length(), key);
 		return createSection(s, deepRep);
@@ -511,7 +509,7 @@ public abstract class Section {
 	 * @return a String representation of the current section.
 	 */
 	@Override
-	public final String toString() {
-	  return getCurrent().toString();
+	public String toString() {
+	  return current.toString();
 	}
 }
