@@ -1,6 +1,7 @@
 package me.altzenck.yml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
@@ -9,8 +10,12 @@ public class YamlBase extends Section {
 	protected Section def;
 
 	protected YamlBase(Map<String, Object> yaml) {
-		super(yaml, new ArrayList<String>(), null);
-	    setDefaults(this);
+	    super(yaml, new ArrayList<String>(), null);
+	    def = new Section(null, null, null, true) {};
+	}
+	
+	public void setDefaults() {
+		setDefaults(this);
 	}
 	
 	/**
