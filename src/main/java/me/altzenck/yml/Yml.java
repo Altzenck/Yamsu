@@ -8,7 +8,7 @@ import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author Altzenck
- * @version 1.1.0
+ * @version 1.2.0
  */
 public class Yml extends YamlBase{
 
