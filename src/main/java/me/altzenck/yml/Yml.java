@@ -10,11 +10,11 @@ import org.yaml.snakeyaml.Yaml;
  * @author Altzenck
  * @version 1.1.0
  */
-public class Yml extends Section{
+public class Yml extends YamlBase{
 
    @SuppressWarnings("unchecked")
    private Yml(InputStream is) {
-	   yaml.putAll((Map<String,Object>) new Yaml().load(is));
+	   super((Map<String,Object>) new Yaml().load(is));
    }
    
    public void setDefaults(@Nonnull File file) {
@@ -37,7 +37,7 @@ public class Yml extends Section{
 	   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 	   if(file.exists()) file.delete();
 	   try {
-		StringReader in = new StringReader(new Yaml(options).dump(yaml));
+		StringReader in = new StringReader(new Yaml(options).dump(current));
 	    FileOutputStream os = new FileOutputStream(file);
 	    char[] buffer = new char[2048];
 	    int i = 0;
