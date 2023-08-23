@@ -2,8 +2,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>me.altzenck</groupId>
   <artifactId>yml</artifactId>
-  <version>1.0.2</version>
-  <name>YML</name>
+  <version>1.1.2</version>
+  <name>Yml</name>
   <repositories>
 		<repository>
 		    <id>jitpack.io</id>
