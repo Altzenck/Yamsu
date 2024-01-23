@@ -50,4 +50,12 @@ public class YmlUtils {
 		}
 		return n;
 	}
+
+	public static Integer asInt(String s) {
+		try {
+			return Integer.parseInt(s);
+		} catch (NumberFormatException ignored) {
+			return null;
+		}
+	}
 }

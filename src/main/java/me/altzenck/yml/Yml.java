@@ -5,12 +5,11 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
-
 import me.altzenck.io.IOUtils;
 
 /**
  * @author Altzenck
- * @version 1.1.0
+ * @version 1.2.0
  */
 public class Yml extends YamlBase{
 

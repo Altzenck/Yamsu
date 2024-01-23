@@ -21,6 +21,22 @@
           <target>11</target>
         </configuration>
       </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>3.4.1</version>
+          <configuration>
+            <createDependencyReducedPom>false</createDependencyReducedPom>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+            </execution>
+          </executions>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -28,16 +44,19 @@
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
       <version>2.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
       <version>3.0.2</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
 	    <groupId>com.github.Altzenck</groupId>
 	    <artifactId>IOUtils</artifactId>
 	    <version>-5d27eb785c-1</version>
+	    <scope>compile</scope>
 	</dependency>
   </dependencies>
 </project>

@@ -1,10 +1,6 @@
 package me.altzenck.yml;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -94,6 +90,20 @@ public abstract class Section {
 		Map<String, Object> current = getSection(s);
 		if(current == null) return null;
 		return new Section(current, s, root) {};
+	}
+
+	public List<Section> getListSection(String path) {
+		List<Map<String, Object>> maps = null;
+		List<Section> sections = new ArrayList<>();
+		try {
+			maps = ((List<Map<String, Object>>) get(path));
+		} catch (ClassCastException ignored) {
+			return null;
+		}
+		for(Map<String, Object> map: maps)
+			sections.add(new Section(map, null, root) {});
+		return sections;
+
 	}
 
 	/*
@@ -377,7 +387,7 @@ public abstract class Section {
 	 * @param path The path to the key that will be assigned a value.
 	 * @param value The value to set.
 	 * 
-	 * @param the previous value of the key path (if it already existed, <code>null</code> otherwise).
+	 * @return the previous value of the key path (if it already existed, <code>null</code> otherwise).
 	 */
 	public Object set(@Nonnull String path, Object value) {
 		return set(path, value, true);
@@ -411,7 +421,7 @@ public abstract class Section {
 	/**
 	 * Check if the specified path (starting from the current section) is a Section.<br></br>
      * Keys in the YAML format can contain another series of keys and values, which in turn can also contain more keys and values, and so on. These container keys are referred to as Sections.<br>
-     * When parsing a YAML object, the sections are interpreted as a map of keys and values, that is, {@link #get(SomeSection)} will be an instance of {@link Map}.
+     * When parsing a YAML object, the sections are interpreted as a map of keys and values, that is, {@link #get(String)} will be an instance of {@link Map}.
 	 *
 	 * @param path The path to check.
 	 * @return <code>true</code> if the path exists and is a section, <code>false</code> otherwise.
