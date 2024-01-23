@@ -10,7 +10,7 @@ import me.altzenck.utils.YmlUtils;
 @SuppressWarnings("unchecked")
 public abstract class Section {
 
-	private YamlBase root;
+	private final YamlBase root;
 
 	protected boolean isDefault;
 
@@ -34,8 +34,8 @@ public abstract class Section {
 	protected Section(@Nullable Map<String, Object> sec, @Nullable ArrayList<String> path, @Nullable YamlBase root, boolean isDef) {
 		isDefault = isDef;
 		this.root = (root == null && !isDef)? ((YamlBase) this): root;
-		current = (sec == null)? new HashMap<String,Object>(): sec;
-		cpath = (path == null)? new ArrayList<String>(): path;
+		current = (sec == null)? new HashMap<>(): sec;
+		cpath = (path == null)? new ArrayList<>(): path;
 	}
 
 	public YamlBase getRoot() {
@@ -49,6 +49,7 @@ public abstract class Section {
      * @param path The path to the default section key starting from the current section.
      * @param replace If even such a path exists in the current section, its value must be replaced.
      */
+	@SuppressWarnings("ConstantValue")
 	public void addDefaults(@Nonnull String path, boolean replace) {
 		if(isDefault) return;
 		Object dvalue = (isDefault)? null: getDefault(path);
@@ -71,11 +72,11 @@ public abstract class Section {
 		for(String key: d.keySet()) {
 			Object dvalue = d.get(key);
 			boolean c = m.containsKey(key), ins = dvalue instanceof Map;
-			if((c && replace && !ins) || !c)
+			if(!c || (replace && !ins))
 			  m.put(key, dvalue);
 			try {
 			  aADSetter((Map<String, Object>) m.get(key), (Map<String, Object>) dvalue, replace);
-			} catch (ClassCastException e) {}
+			} catch (ClassCastException ignored) {}
 		}
 	}
 
@@ -269,7 +270,7 @@ public abstract class Section {
 	 */
 	public List<String> getListString(String path) {
 		Object o = get(path);
-		List<String> sL = new ArrayList<String>();
+		List<String> sL = new ArrayList<>();
 		if(o instanceof List) {
 		  for(Object e: ((List<Object>) o)) 
 			sL.add(e.toString());
@@ -285,7 +286,7 @@ public abstract class Section {
 	 */
 	public List<Integer> getListInt(String path) {
 		Object o = get(path);
-		List<Integer> sL = new ArrayList<Integer>();
+		List<Integer> sL = new ArrayList<>();
 		if(o instanceof List) {
 		  for(Object e: ((List<Object>) o)) 
 			sL.add((int)parseNumber(e));
@@ -301,7 +302,7 @@ public abstract class Section {
 	 */
 	public List<Long> getListLong(String path) {
 		Object o = get(path);
-		List<Long> sL = new ArrayList<Long>();
+		List<Long> sL = new ArrayList<>();
 		if(o instanceof List) {
 		  for(Object e: ((List<Long>) o)) 
 			sL.add((long)parseNumber(e));
@@ -317,7 +318,7 @@ public abstract class Section {
 	 */
 	public List<Float> getListFloat(String path) {
 		Object o = get(path);
-		List<Float> sL = new ArrayList<Float>();
+		List<Float> sL = new ArrayList<>();
 		if(o instanceof List) {
 		  for(Object e: ((List<Float>) o)) 
 			sL.add((float)parseNumber(e));
@@ -333,7 +334,7 @@ public abstract class Section {
 	 */
 	public List<Double> getListDouble(String path) {
 		Object o = get(path);
-		List<Double> sL = new ArrayList<Double>();
+		List<Double> sL = new ArrayList<>();
 		if(o instanceof List) {
 		  for(Object e: ((List<Double>) o)) 
 			sL.add((double)parseNumber(e));
@@ -358,7 +359,7 @@ public abstract class Section {
 	 * @return the list of child sections of this section.
 	 */
 	public List<String> getKeys(boolean deep) {
-		List<String> ks = new ArrayList<String>();
+		List<String> ks = new ArrayList<>();
 		Map<String,Object> current = this.current;
 		keyDeep(current, ks, "", deep);
 		return ks;
@@ -439,9 +440,9 @@ public abstract class Section {
 	}
 
 	private Map<String,Object> getSection(Map<String,Object> map, List<String> s, boolean p){
-		if(p) {s = new ArrayList<String>(s);}
+		if(p) {s = new ArrayList<>(s);}
 		if(map == null) return null;
-		if(s.size() == 0) {
+		if(s.isEmpty()) {
 			return map;
 		}
 		String key = s.remove(0);
@@ -465,17 +466,16 @@ public abstract class Section {
 
 	private Map<String, Object> createSection(List<String> s, boolean replace){
 		Map<String, Object> temp = current;
-		for(int i = 0; i < s.size(); i++) {
-		  String key = s.get(i);
-		  Object value = temp.get(key);
-		  if(value != null && value instanceof Map) {
-			  temp = (Map<String, Object>) value;
-			  continue;
-		  }
-		  if(value != null && !replace) return null;
-		  temp.put(key, new HashMap<String, Object>());
-		  temp = (Map<String, Object>) temp.get(key);
-		}
+        for (String key : s) {
+            Object value = temp.get(key);
+            if (value instanceof Map) {
+                temp = (Map<String, Object>) value;
+                continue;
+            }
+            if (value != null && !replace) return null;
+            temp.put(key, new HashMap<String, Object>());
+            temp = (Map<String, Object>) temp.get(key);
+        }
 		return temp;
 	}
 
@@ -500,13 +500,13 @@ public abstract class Section {
 	}
 
 	private ArrayList<String> parsePath(String path) {
-		return new ArrayList<String>(Arrays.asList(path.split(SEPARATOR_RGX)));
+		return new ArrayList<>(Arrays.asList(path.split(SEPARATOR_RGX)));
 	}
 
 	private Map<String, Object> secureKeyPathHandler(String path, StringBuilder sb, boolean deepRep) {
 		List<String> s = parsePath(path);
 		String key = YmlUtils.removeLast(s);
-		if(s.size() == 0) {
+		if(s.isEmpty()) {
 			sb.replace(0, sb.length(), path);
 			return current;
 		}
