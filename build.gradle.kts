@@ -29,7 +29,6 @@ dependencies {
     implementation("com.github.Altzenck:IOUtils:-SNAPSHOT")
     implementation("org.yaml:snakeyaml:2.2")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {
