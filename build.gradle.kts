@@ -38,7 +38,7 @@ tasks {
     }
 
     shadowJar {
-        destinationDirectory.set(File(projectDir, "./build/lib"))
+        destinationDirectory.set(File(projectDir, "./build/libs"))
         archiveFileName.set(jar.get().archiveFileName)
         dependencies {
             include(dependency("com.github.Altzenck:IOUtils:-SNAPSHOT"))
@@ -51,7 +51,13 @@ tasks {
 }
 
 publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
+    publications{
+        create<MavenPublication>("maven") {
+           from(components["java"])
+           groupId = project.group.toString()
+           artifactId = project.name
+           version = project.version.toString()
+           artifact("build/libs/${project.name}-${project.version}.jar")
+        }
     }
 }
