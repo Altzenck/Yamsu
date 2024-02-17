@@ -101,10 +101,10 @@ public abstract class Section {
 		} catch (ClassCastException ignored) {
 			return null;
 		}
+		if(maps == null) return Collections.emptyList();
 		for(Map<String, Object> map: maps)
 			sections.add(new Section(map, null, root) {});
 		return sections;
-
 	}
 
 	/*
