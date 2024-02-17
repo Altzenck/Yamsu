@@ -9,7 +9,7 @@ import me.altzenck.io.IOUtils;
 
 /**
  * @author Altzenck
- * @version 1.2.0
+ * @version 1.2.1
  */
 public class Yml extends YamlBase{
 
