@@ -2,69 +2,104 @@ package me.altzenck.yml;
 
 import java.io.*;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
+import me.altzenck.ReflectionUtils;
 import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import me.altzenck.io.IOUtils;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.representer.Representer;
 
 /**
  * @author Altzenck
- * @version 1.2.1
+ * @version 2.0-SNAPSHOT
  */
-public class Yml extends YamlBase{
+public class Yml extends MemorySection {
 
-   @SuppressWarnings("unchecked")
-   private Yml(InputStream is) {
-	   super((Map<String,Object>) new Yaml().load(is));
-   }
+   private final Yaml snakeYaml;
 
-   public void setDefaults(@Nonnull File file) {
-	   setDefaults(Yml.loadYaml(file));
-   }
-
-   public void setDefaults(@Nonnull Reader reader) {
-	   setDefaults(Yml.loadYaml(reader));
-   }
-
-   public void setDefaults(@Nonnull InputStream is) {
-	   setDefaults(Yml.loadYaml(is));
+   private Yml(Reader reader) {
+	   super(null, "");
+	   AtomicReference<Yaml> refSnakeYaml = new AtomicReference<>();
+	   ReflectionUtils.getDeclaredField(MemorySection.class, this, "map").set(load(refSnakeYaml, reader));
+	   snakeYaml = refSnakeYaml.get();
    }
 
    public void save(@Nonnull File file) {
 	   file.getParentFile().mkdirs();
 	   if(file.isDirectory()) throw new IllegalArgumentException("The specified file is a directory!");
-	   DumperOptions options = new DumperOptions();
-	   options.setIndent(2);
-	   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 	   if(file.exists()) file.delete();
 	   try {
-		StringReader in = new StringReader(new Yaml(options).dump(current));
+		StringReader in = new StringReader(snakeYaml.dump(map));
 	    FileOutputStream os = new FileOutputStream(file);
-	    char[] buffer = new char[2048];
-	    int i = 0;
-		while((i = in.read(buffer, 0, buffer.length))  != -1) {
-			os.write(new String(buffer).getBytes(), 0, i);
-		}
-		os.close();
+		IOUtils.copyBytes(in, os, 2048);
 	   } catch (IOException e) {
 		e.printStackTrace();
 	   }
    }
 
    public static Yml loadYaml(@Nonnull File file) {
-	try {
-		return loadYaml(new FileInputStream(file));
-	} catch (Exception e) {
-		return loadYaml(new ByteArrayInputStream(new byte[0]));
-	}
+	   try {
+		   return loadYaml(new FileInputStream(file));
+	   } catch (IOException e) {
+		   e.printStackTrace();
+		   return loadYaml(new StringReader(""));
+	   }
    }
 
    public static Yml loadYaml(@Nonnull Reader reader) {
-	 return loadYaml(IOUtils.readerToInputStream(reader, 2048));
+	    return new Yml(reader);
    }
 
    public static Yml loadYaml(@Nonnull InputStream is) {
-     return new Yml(is);
+       return loadYaml(new InputStreamReader(is));
    }
 
+   public Yml withDefaultValues(File file) {
+	   try {
+		   return withDefaultValues(new FileInputStream(file));
+	   } catch (IOException e) {
+		   e.printStackTrace();
+	   }
+	   return this;
+   }
+
+	protected static Map<String, Object> load(AtomicReference<Yaml> refSnakeYaml, Reader reader) {
+		LoaderOptions loaderOptions = new LoaderOptions();
+		loaderOptions.setProcessComments(true);
+		DumperOptions dumperOptions = new DumperOptions();
+		dumperOptions.setProcessComments(true);
+		dumperOptions.setIndent(2);
+		dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		refSnakeYaml.set(new Yaml(new Constructor(loaderOptions), new Representer(dumperOptions), dumperOptions, loaderOptions));
+		return refSnakeYaml.get().load(reader);
+	}
+
+	public Yml withDefaultValues(InputStream is) {
+		return withDefaultValues(new InputStreamReader(is));
+	}
+
+	public Yml withDefaultValues(Reader reader) {
+	    Map<String, Object> load = load(new AtomicReference<>(), reader);
+		DefaultSection ds = new DefaultSection(load, "");
+		ReflectionUtils.getDeclaredField(MemorySection.class, this, "def").set(ds);
+	    return this;
+	}
+
+	private void setEmptyDefaultValue() {
+	    withDefaultValues(new StringReader(""));
+	}
+
+	public Yml withCopyDefaultValues() {
+	    setEmptyDefaultValue();
+	    setDefaults(this);
+	    return this;
+	}
+
+	public Yml withPathSeparator(char separator) {
+	    pathProvider.setSeparator(separator).inmutable();
+	    return this;
+	}
 }
