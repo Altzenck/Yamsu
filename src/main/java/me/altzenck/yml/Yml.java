@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
-import me.altzenck.ReflectionUtils;
+import me.altzenck.util.ReflectionUtils;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
