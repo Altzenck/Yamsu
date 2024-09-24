@@ -29,12 +29,7 @@ public class Sections {
     private static class UnmodifiableSection implements Section {
 
         private final Section original;
-        private final Section unModDefault = new UnmodifiableSection(original.getDefaults()) {
-            @Override
-            public Section getDefaults() {
-                return this;
-            }
-        };
+        private Section unModDefault;
 
         @Override
         public Section getSection(@NonNull String section) {
@@ -124,7 +119,12 @@ public class Sections {
 
         @Override
         public Section getDefaults() {
-            return unModDefault;
+            return unModDefault == null? (unModDefault = new UnmodifiableSection(original.getDefaults()) {
+                @Override
+                public Section getDefaults() {
+                    return this;
+                }
+            }) : unModDefault;
         }
 
         @Override
